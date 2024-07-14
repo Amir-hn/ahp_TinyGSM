@@ -598,7 +598,7 @@ streamGetIntBefore(',');
     } else if (res == 3) {
       DBG("MQTT COnnected");
     } else if(res == 4) {
-      DBG("MQTT DISCONNECT")
+      DBG("MQTT DISCONNECT");
     }
 
     // 0 Initial, 1 Opening, 2 Connected, 3 Listening, 4 Closing
