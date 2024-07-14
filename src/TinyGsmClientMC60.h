@@ -111,7 +111,7 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     void stop(uint32_t maxWaitMs) {
       uint32_t startMillis = millis();
       dumpModemBuffer(maxWaitMs);
-      at->sendAT(GF("+QICLOSE="), mux);
+      at->sendAT(GF("+QMTCLOSE="), mux);
       sock_connected = false;
       at->waitResponse((maxWaitMs - (millis() - startMillis)), GF("CLOSED"),
                        GF("CLOSE OK"), GF("ERROR"));
@@ -254,36 +254,39 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     gprsDisconnect();
 
     // select foreground context 0 = VIRTUAL_UART_1
-    sendAT(GF("+QIFGCNT=0"));
-    if (waitResponse() != 1) { return false; }
+    // sendAT(GF("+QIFGCNT=0"));
+    // if (waitResponse() != 1) { return false; }
 
     // Select GPRS (=1) as the Bearer
-    sendAT(GF("+QICSGP=1,\""), apn, GF("\",\""), user, GF("\",\""), pwd,
-           GF("\""));
-    if (waitResponse() != 1) { return false; }
+    // sendAT(GF("+QICSGP=1,\""), apn, GF("\",\""), user, GF("\",\""), pwd,
+    //        GF("\""));
+    // if (waitResponse() != 1) { return false; }
 
     // Define PDP context - is this necessary?
-    sendAT(GF("+CGDCONT=1,\"IP\",\""), apn, '"');
-    waitResponse();
+    // sendAT(GF("+CGDCONT=1,\"IP\",\""), apn, '"');
+    // waitResponse();
 
     // Activate PDP context - is this necessary?
-    sendAT(GF("+CGACT=1,1"));
-    waitResponse(60000L);
+    // sendAT(GF("+CGACT=1,1"));
+    // waitResponse(60000L);
+
+    / sendAT(GF("+QICSGP=1,\""), apn, GF("\""));
+    if (waitResponse() != 1) { return false; }
 
     // Select TCP/IP transfer mode - NOT transparent mode
-    sendAT(GF("+QIMODE=0"));
-    if (waitResponse() != 1) { return false; }
+    // sendAT(GF("+QIMODE=0"));
+    // if (waitResponse() != 1) { return false; }
 
-    // Enable multiple TCP/IP connections
-    sendAT(GF("+QIMUX=1"));
-    if (waitResponse() != 1) { return false; }
+    // // Enable multiple TCP/IP connections
+    // sendAT(GF("+QIMUX=1"));
+    // if (waitResponse() != 1) { return false; }
 
-    // Modem is used as a client
-    sendAT(GF("+QISRVC=1"));
-    if (waitResponse() != 1) { return false; }
+    // // Modem is used as a client
+    // sendAT(GF("+QISRVC=1"));
+    // if (waitResponse() != 1) { return false; }
 
     // Start TCPIP Task and Set APN, User Name and Password
-    sendAT("+QIREGAPP=\"", apn, "\",\"", user, "\",\"", pwd, "\"");
+    sendAT("+QIREGAPP");
     if (waitResponse() != 1) { return false; }
 
     // Activate GPRS/CSD Context
@@ -292,6 +295,17 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
 
     // Check that we have a local IP address
     if (localIP() == IPAddress(0, 0, 0, 0)) { return false; }
+
+    sendAT(GF("V1"));
+    if (waitResponse(60000L) != 1) { return false; }
+
+    sendAT(GF("+QIHEAD=1"));
+    if (waitResponse(60000L) != 1) { return false; }
+
+
+
+
+
 
     // Set Method to Handle Received TCP/IP Data
     // Mode=2 - Output a notification statement:
@@ -425,18 +439,71 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     // If it is a domain name, "AT+QIDNSIP=1" should be executed.
     // "AT+QIDNSIP=0" is for dotted decimal IP address.
     IPAddress addr;
-    sendAT(GF("+QIDNSIP="),
-           (TinyGsmIpFromString(host) == IPAddress(0, 0, 0, 0) ? 0 : 1));
+    sendAT(GF("+QIDNSIP=1"));
     if (waitResponse() != 1) { return false; }
 
     uint32_t timeout_ms = ((uint32_t)timeout_s) * 1000;
-    sendAT(GF("+QIOPEN="), mux, GF(",\""), GF("TCP"), GF("\",\""), host,
-           GF("\","), port);
+
+    sendAT(GF("+QMTOPEN="), mux, GF("\""), host,GF("\",\""), port,GF("\""));
     int8_t rsp = waitResponse(timeout_ms, GF("CONNECT OK" AT_NL),
                               GF("CONNECT FAIL" AT_NL),
                               GF("ALREADY CONNECT" AT_NL));
     return (1 == rsp);
   }
+
+  unsigned int MyRand(unsigned int start_range,unsigned int end_range)
+  {
+    static unsigned int rand = 0xACE1U; /* Any nonzero start state will work. */
+
+    /*check for valid range.*/
+    if(start_range == end_range) {
+        return start_range;
+    }
+
+    /*get the random in end-range.*/
+    rand += 0x3AD;
+    rand %= end_range;
+
+    /*get the random in start-range.*/
+    while(rand < start_range){
+        rand = rand + end_range - start_range;
+    }
+
+    return rand;
+  }
+
+
+  void  publishMessage(const char* topic, const char* payload,int qos,bool retain) {
+    unsigned int random = MyRand(1,65534)
+    sendAT(GF("+QMTPUB="),mux,',',random,',',qos,',',retain ? 1 : 0,",\"",topic,"\",\"",payload,'\"');
+    streamGetIntBefore(',');
+    streamGetIntBefore(',')
+    String res = streamGetIntBefore(',');
+    Serial.println("publish message:");
+    Serial.println(res);  
+  }
+
+  void subscribeTopic(const char* topic, int qos) {
+    unsigned int random = MyRand(1,65534)
+    sendAT(GF("+QMTSUB="),mux,',',random,",\"",topic,'\"',qos);
+    streamGetIntBefore(',');
+    streamGetIntBefore(',')
+    String res = streamGetIntBefore(',');
+    Serial.println("subscribe message:");
+    Serial.println(res);  
+  }
+
+  void unsubscribeTopic(const char* topic) {
+unsigned int random = MyRand(1,65534)
+    sendAT(GF("+QMTUNS="),mux,',',random,",\"",topic,'\"');
+streamGetIntBefore(',');
+    streamGetIntBefore(',')
+    String res = streamGetIntBefore(',');
+    Serial.println("unsubscribe message:");
+    Serial.println(res);  
+  }
+
+
 
   int16_t modemSend(const void* buff, size_t len, uint8_t mux) {
     sendAT(GF("+QISEND="), mux, ',', (uint16_t)len);
@@ -510,22 +577,32 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
   }
 
   bool modemGetConnected(uint8_t mux) {
-    sendAT(GF("+QISTATE=1,"), mux);
+    sendAT(GF("+QMTCONN?"));
     // +QISTATE: 0,"TCP","151.139.237.11",80,5087,4,1,0,0,"uart1"
 
-    if (waitResponse(GF("+QISTATE:")) != 1) { return false; }
+    // if (waitResponse(GF("+QISTATE:")) != 1) { return false; }
 
-    streamSkipUntil(',');                  // Skip mux
-    streamSkipUntil(',');                  // Skip socket type
-    streamSkipUntil(',');                  // Skip remote ip
-    streamSkipUntil(',');                  // Skip remote port
-    streamSkipUntil(',');                  // Skip local port
+    // streamSkipUntil(',');                  // Skip mux
+    // streamSkipUntil(',');                  // Skip socket type
+    // streamSkipUntil(',');                  // Skip remote ip
+    // streamSkipUntil(',');                  // Skip remote port
+    // streamSkipUntil(',');                  // Skip local port
     int8_t res = streamGetIntBefore(',');  // socket state
 
     waitResponse();
 
+    if(res == 1) {
+      DBG("INITIAL MQTT");
+    } else if (res == 2 ){
+      DBG("MQTT Connecting");
+    } else if (res == 3) {
+      DBG("MQTT COnnected");
+    } else if(res == 4) {
+      DBG("MQTT DISCONNECT")
+    }
+
     // 0 Initial, 1 Opening, 2 Connected, 3 Listening, 4 Closing
-    return 2 == res;
+    return 4 < res;
   }
 
   /*
