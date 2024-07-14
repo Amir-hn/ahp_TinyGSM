@@ -270,7 +270,7 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     // sendAT(GF("+CGACT=1,1"));
     // waitResponse(60000L);
 
-    / sendAT(GF("+QICSGP=1,\""), apn, GF("\""));
+     sendAT(GF("+QICSGP=1,\""), apn, GF("\""));
     if (waitResponse() != 1) { return false; }
 
     // Select TCP/IP transfer mode - NOT transparent mode
@@ -474,10 +474,10 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
 
 
   void  publishMessage(const char* topic, const char* payload,int qos,bool retain) {
-    unsigned int random = MyRand(1,65534)
-    sendAT(GF("+QMTPUB="),mux,',',random,',',qos,',',retain ? 1 : 0,",\"",topic,"\",\"",payload,'\"');
+    unsigned int random = MyRand(1,65534);
+    sendAT(GF("+QMTPUB="),mux,',',random,',',qos,',',retain ? 1 : 0,",\"",topic,"\",\"",payload,"\"");
     streamGetIntBefore(',');
-    streamGetIntBefore(',')
+    streamGetIntBefore(',');
     String res = streamGetIntBefore(',');
     Serial.println("publish message:");
     Serial.println(res);  

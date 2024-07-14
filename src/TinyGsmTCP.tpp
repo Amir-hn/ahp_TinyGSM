@@ -112,9 +112,9 @@ class TinyGsmTCP {
     //   stop(15000L);
     // }
 
-    void publishMessage(const uint8_t* buf, size_t size) {
-      write(buf,size,mux)
-    }
+    // void publishMessage(const uint8_t* buf, size_t size) {
+    //   write(buf,size,mux);
+    // }
 
     // Writes data out on the client using the modem send functionality
     size_t write(const uint8_t* buf, size_t size) override {
