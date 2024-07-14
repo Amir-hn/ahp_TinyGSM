@@ -473,12 +473,12 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
   }
 
 
-  void  publishMessage(const char* topic, const char* payload,int qos,bool retain) {
+  void  publishMessage(const char* topic, const char* payload,int qos,bool retain,int mux=0) {
     unsigned int random = MyRand(1,65534);
     sendAT(GF("+QMTPUB="),mux,',',random,',',qos,',',retain ? 1 : 0,",\"",topic,"\",\"",payload,"\"");
     streamGetIntBefore(',');
     streamGetIntBefore(',');
-    String res = streamGetIntBefore(',');
+    int res = streamGetIntBefore(',');
     Serial.println("publish message:");
     Serial.println(res);  
   }
@@ -488,7 +488,7 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     sendAT(GF("+QMTSUB="),mux,',',random,",\"",topic,'\"',qos);
     streamGetIntBefore(',');
     streamGetIntBefore(',')
-    String res = streamGetIntBefore(',');
+    int res = streamGetIntBefore(',');
     Serial.println("subscribe message:");
     Serial.println(res);  
   }
@@ -497,8 +497,8 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
 unsigned int random = MyRand(1,65534)
     sendAT(GF("+QMTUNS="),mux,',',random,",\"",topic,'\"');
 streamGetIntBefore(',');
-    streamGetIntBefore(',')
-    String res = streamGetIntBefore(',');
+    streamGetIntBefore(',');
+    int res = streamGetIntBefore(',');
     Serial.println("unsubscribe message:");
     Serial.println(res);  
   }
