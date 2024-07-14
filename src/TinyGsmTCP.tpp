@@ -72,7 +72,7 @@ class TinyGsmTCP {
    * Inner Client
    */
  public:
-  class GsmClient : public Client {
+  class GsmClient : public AhpClient {
     // Make all classes created from the modem template friends
     friend class TinyGsmTCP<modemType, muxCount>;
     typedef TinyGsmFifo<uint8_t, TINY_GSM_RX_BUFFER> RxFifo;
