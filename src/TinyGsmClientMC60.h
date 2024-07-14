@@ -483,18 +483,18 @@ class TinyGsmMC60 : public TinyGsmModem<TinyGsmMC60>,
     Serial.println(res);  
   }
 
-  void subscribeTopic(const char* topic, int qos) {
-    unsigned int random = MyRand(1,65534)
+  void subscribeTopic(const char* topic, int qos,int mux=0) {
+    unsigned int random = MyRand(1,65534);
     sendAT(GF("+QMTSUB="),mux,',',random,",\"",topic,'\"',qos);
     streamGetIntBefore(',');
-    streamGetIntBefore(',')
+    streamGetIntBefore(',');
     int res = streamGetIntBefore(',');
     Serial.println("subscribe message:");
     Serial.println(res);  
   }
 
-  void unsubscribeTopic(const char* topic) {
-unsigned int random = MyRand(1,65534)
+  void unsubscribeTopic(const char* topic,int mux=0) {
+unsigned int random = MyRand(1,65534);
     sendAT(GF("+QMTUNS="),mux,',',random,",\"",topic,'\"');
 streamGetIntBefore(',');
     streamGetIntBefore(',');
